@@ -1,69 +1,117 @@
-# jeff simonson, 5/4/19 python homework
-
-# If I had more time I realize that I would need to do a better job of setting up the key-value dictionaries
-# to iterate and update the vote counts based on the candidate key search, get the vote count associated with that key and add to the vote.
-# Once I got that then the rest would be relatively easy and I could loop through the dictionary to calculate the percentages of total vote,
-# find a max and declare the winner. Oh well... Pandas will likely solve this for me. :)
-
-#project objectives
-#The total number of votes cast
-#A complete list of candidates who received votes
-#The percentage of votes each candidate won
-#The total number of votes each candidate won
-#The winner of the election based on popular vote.
-
-#--------------------------------------------------
-
+# jeff simonson, python homework, 5/4/19
 # modules
+
 import os
 import csv
 
 #declare and set variables equal to 0
-vote_counter = 0
-total_votes = 0
-
+netprofit_total = 0
+mos_total = 0
+netprofit_chg = 0
+netprofit_biggest_gain = 0
+netprofit_biggest_loss = 0
+cumulative_netprofit_chg = 0
 
 #name of cvs file
-myfile = "election_data.csv"
+myfile = "budget_data.csv"
 #provide path (i was having legit trouble with resource so I had to hard code it, but it works!)
 csvpath = os.path.join('C:\\dumbass_sandbox',myfile)
 
 with open(csvpath, newline="") as csvfile:
     #initialize csv.reader
     csvreader = csv.reader(csvfile, delimiter=",")
-
+    
     #acknowledge headers in first row, skip them
     file_header = next(csvreader)
+    
+    #check header
+    #print(f'CSV Header: {file_header}')
 
     #loop rows
     for r in csvreader:
 
-        if vote_counter == 0:
-            # add candidate & votes to dictionary
-            c_name = r[2]
-            votes_by_candidate = {'c_name': c_name, 'c_votes': 1}
-        else:
-            # does candidate already exist?                 
-            for c_name, c_votes in votes_by_candidate.items():
-                #candidate exists
-                if c_name == r[2]:
-                    # update the candidate-vote tally pair
-                    add_to_old_votes = votes_by_candidate['c_votes'].values() + 1
-                    votes_by_candidate = {'c_name': c_name, 'c_votes': add_to_old_votes}
-                else:
-                    # add a new name to the dictionary votes = 1
-                    votes_by_candidate = {'c_name': r[2], 'c_votes': 1}
+        if mos_total == 0:
+            #values start in 2nd row, set prev = 1st row of data
+            prev_row_value = int(r[1])
+            
+            #check 1st row value, 2nd column
+            #print(prev_row_value)
+            #print("------prev row amt----------")
+        
+        #get net profit, sum 2nd column
+        netprofit_total += int(r[1])
+        #check net profit rolling total
+        #print(netprofit_total)
+        #print("----- rolling np total ---------")
 
-        #count all votes
-        vote_counter += 1
+        #counter for months
+        mos_total += 1
+        #check counter
+        #print(mos_total)  
+        #print("----- count months ---------")
 
-#out of the loop, verify values from above
+        #calc period change in netprofit, get rolling total of change
+        netprofit_chg = int(r[1]) - prev_row_value
+        cumulative_netprofit_chg += netprofit_chg
+        # check rolling total of change
+        #print(netprofit_chg)
 
-#count votes but subtract 1 for headers
-total_votes = vote_counter -1
-print(total_votes)
+        #identify biggest loss
+        if (netprofit_chg < netprofit_biggest_loss):
+            # set biggest loss is now current row
+            netprofit_biggest_loss = netprofit_chg
+            # grab the month from the current row, first column
+            month_of_biggest_loss = r[0]
 
-#print out vote tallies by candidate
+        #identify biggest gain
+        if (netprofit_chg > netprofit_biggest_gain):
+            # set biggest gain is now current row
+            netprofit_biggest_gain = netprofit_chg
+            # grab the month from current row, first column
+            month_of_biggest_gain = r[0]
+        
+        #current row net profit loss becomes previous row
+        prev_row_value = int(r[1])
 
 
-       
+# Check values from above
+#print("----verify outside of loop values ----")
+#verify months
+#print(mos_total)
+#verify months for avg net profit chg calc
+#print(mos_total-1)
+#verify rolling total change in net profit
+#print(netprofit_total)
+#verify average monthly change in net profit
+#print(cumulative_netprofit_chg/ (mos_total-1))
+#verify biggest loss record
+#print(month_of_biggest_loss)
+#print(netprofit_biggest_loss)
+#verify biggest gain record
+#print(month_of_biggest_gain)
+#print(netprofit_biggest_gain)
+
+# output analysis to terminal
+print("Financial Analysis")
+print("--------------------------------")
+print(f"Total Months: {mos_total}")
+print(f"Total: ${netprofit_total}")
+avg_netprofit_change = cumulative_netprofit_chg/(mos_total-1)
+print(f"Average Change: ${round(avg_netprofit_change, 2)}")
+print(f"Greatest Increase in Profits: {month_of_biggest_gain} (${netprofit_biggest_gain})")
+print(f"Greatest Decrease in Profits: {month_of_biggest_loss} (${netprofit_biggest_loss})")
+
+
+#output to file
+#specify the file to write to
+output_file = "C:\dumbass_sandbox\pybank_analysis.txt"
+with open(output_file, 'w') as file_object:
+    file_object.write("Financial Analysis\n")
+    file_object.write("--------------------------------\n")
+    file_object.write(f"Total Months: {mos_total}\n")
+    file_object.write(f"Total: ${netprofit_total}\n")
+    file_object.write(f"Average Change: ${round(avg_netprofit_change, 2)}\n")
+    file_object.write(f"Greatest Increase in Profits: {month_of_biggest_gain} (${netprofit_biggest_gain})\n")
+    file_object.write(f"Greatest Decrease in Profits: {month_of_biggest_loss} (${netprofit_biggest_loss})\n")
+
+
